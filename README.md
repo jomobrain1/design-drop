@@ -23,20 +23,7 @@ Live app: https://designd.netlify.app/
 
 DesignDrop can be used to create quote posters, announcement graphics, social media posts, event posters, and branded image cards.
 
-Example poster style:
-
-```text
-[Main image background]
-[Logo in top corner]
-[Overlay band at bottom, center, or top]
-["Styled quote or poster text"]
-```
-
-If you have a sample poster image, place it in the project and reference it here, for example:
-
-```md
-![Example poster](./example-poster.png)
-```
+![Example poster created with DesignDrop](./example.png)
 
 ## How To Use
 
