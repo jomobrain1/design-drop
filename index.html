@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Poster Maker</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .app {
+        max-width: 1100px;
+        margin: auto;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+      }
+
+      .controls {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .controls label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+      }
+
+      .controls input,
+      .controls textarea,
+      .controls select,
+      .controls button {
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .controls input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+      }
+
+      textarea {
+        height: 100px;
+        resize: none;
+      }
+
+      button {
+        border: none;
+        background: #2563eb;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      .canvas-box {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      canvas {
+        max-width: 100%;
+        border: 1px solid #ddd;
+        cursor: grab;
+      }
+
+      @media (max-width: 800px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .canvas-box {
+          order: 1;
+        }
+
+        .controls {
+          order: 2;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <div class="controls">
+        <h2>Poster Maker</h2>
+
+        <label>Main Image</label>
+        <input type="file" id="mainImageInput" accept="image/*" />
+
+        <label>Logo Image</label>
+        <input type="file" id="logoInput" accept="image/*" />
+
+        <label>Logo Corner</label>
+        <select id="logoCorner">
+          <option value="top-right">Top Right</option>
+          <option value="top-left">Top Left</option>
+        </select>
+
+        <label>Overlay Color</label>
+        <input type="color" id="overlayColor" value="#ffffff" />
+
+        <label>Overlay Opacity</label>
+        <input
+          type="range"
+          id="overlayOpacity"
+          min="0"
+          max="1"
+          step="0.1"
+          value="0.7"
+        />
+
+        <label>Overlay Position</label>
+        <select id="overlayPosition">
+          <option value="bottom">Bottom</option>
+          <option value="center">Center</option>
+          <option value="top">Top</option>
+        </select>
+
+        <label>Overlay Height</label>
+        <input
+          type="range"
+          id="overlayHeight"
+          min="80"
+          max="600"
+          step="10"
+          value="160"
+        />
+
+        <label>Text Color</label>
+        <input type="color" id="textColor" value="#000000" />
+
+        <label>Text</label>
+        <textarea
+          id="posterText"
+          placeholder="Enter your poster text here..."
+        ></textarea>
+
+        <label>Font Size</label>
+        <input
+          type="range"
+          id="fontSize"
+          min="20"
+          max="80"
+          step="2"
+          value="42"
+        />
+
+        <label>Font Family</label>
+        <select id="fontFamily">
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="'Times New Roman'">Times New Roman</option>
+          <option value="'Trebuchet MS'">Trebuchet MS</option>
+          <option value="Verdana">Verdana</option>
+          <option value="'Courier New'">Courier New</option>
+        </select>
+
+        <label>Text Position On Overlay</label>
+        <select id="textVerticalAlign">
+          <option value="center">Center</option>
+          <option value="top">Top</option>
+          <option value="bottom">Bottom</option>
+        </select>
+
+        <label>
+          <input type="checkbox" id="quoteText" />
+          Quote Text
+        </label>
+
+        <label>Quote Style</label>
+        <select id="quoteStyle">
+          <option value="curly">Curly Commas</option>
+          <option value="block">Block Quotes</option>
+          <option value="straight">Straight Quotes</option>
+        </select>
+
+        <label>Quote Color</label>
+        <input type="color" id="quoteColor" value="#000000" />
+
+        <label>Logo Size</label>
+        <input
+          type="range"
+          id="logoSize"
+          min="50"
+          max="200"
+          step="5"
+          value="100"
+        />
+
+        <button id="downloadBtn">Download Image</button>
+      </div>
+
+      <div class="canvas-box">
+        <canvas id="canvas"></canvas>
+        <p>Drag the logo to move it.</p>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const mainImageInput = document.getElementById("mainImageInput");
+      const logoInput = document.getElementById("logoInput");
+      const logoCornerInput = document.getElementById("logoCorner");
+      const overlayColorInput = document.getElementById("overlayColor");
+      const overlayOpacityInput = document.getElementById("overlayOpacity");
+      const overlayPositionInput = document.getElementById("overlayPosition");
+      const overlayHeightInput = document.getElementById("overlayHeight");
+      const posterTextInput = document.getElementById("posterText");
+      const textColorInput = document.getElementById("textColor");
+      const fontSizeInput = document.getElementById("fontSize");
+      const fontFamilyInput = document.getElementById("fontFamily");
+      const textVerticalAlignInput =
+        document.getElementById("textVerticalAlign");
+      const quoteTextInput = document.getElementById("quoteText");
+      const quoteStyleInput = document.getElementById("quoteStyle");
+      const quoteColorInput = document.getElementById("quoteColor");
+      const logoSizeInput = document.getElementById("logoSize");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      let mainImage = null;
+      let logoImage = null;
+
+      let logo = {
+        x: 30,
+        y: 30,
+        size: 100,
+        corner: "top-right",
+        dragging: false,
+        offsetX: 0,
+        offsetY: 0,
+      };
+
+      function placeLogoInSelectedCorner() {
+        if (!canvas.width || !canvas.height) return;
+
+        const padding = 40;
+        logo.size = Number(logoSizeInput.value);
+        logo.corner = logoCornerInput.value;
+        logo.y = padding;
+        logo.x =
+          logo.corner === "top-left"
+            ? padding
+            : canvas.width - logo.size - padding;
+      }
+
+      function loadImageFromFile(file, callback) {
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          const img = new Image();
+
+          img.onload = function () {
+            callback(img);
+          };
+
+          img.src = event.target.result;
+        };
+
+        reader.readAsDataURL(file);
+      }
+
+      mainImageInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        loadImageFromFile(file, function (img) {
+          mainImage = img;
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          placeLogoInSelectedCorner();
+
+          drawCanvas();
+        });
+      });
+
+      logoInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        loadImageFromFile(file, function (img) {
+          logoImage = img;
+
+          if (mainImage) {
+            placeLogoInSelectedCorner();
+          }
+
+          drawCanvas();
+        });
+      });
+
+      logoCornerInput.addEventListener("change", function () {
+        placeLogoInSelectedCorner();
+        drawCanvas();
+      });
+
+      function hexToRgb(hex) {
+        const cleanHex = hex.replace("#", "");
+        const bigint = parseInt(cleanHex, 16);
+
+        return {
+          r: (bigint >> 16) & 255,
+          g: (bigint >> 8) & 255,
+          b: bigint & 255,
+        };
+      }
+
+      function drawCircularImage(img, x, y, size) {
+        ctx.save();
+
+        ctx.beginPath();
+        ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.drawImage(img, x, y, size, size);
+
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+      }
+
+      function getWrappedLines(text, maxWidth) {
+        const words = text.split(" ");
+        const lines = [];
+        let line = "";
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + words[i] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth > maxWidth && i > 0) {
+            lines.push(line.trimEnd());
+            line = words[i] + " ";
+          } else {
+            line = testLine;
+          }
+        }
+
+        if (line.trim()) {
+          lines.push(line.trimEnd());
+        }
+
+        return lines;
+      }
+
+      function drawWrappedLines(lines, x, y, lineHeight) {
+        lines.forEach((line, index) => {
+          ctx.fillText(line, x, y + index * lineHeight);
+        });
+      }
+
+      function getQuoteMarks() {
+        if (quoteStyleInput.value === "block") {
+          return {
+            open: "\u275D",
+            close: "\u275E",
+          };
+        }
+
+        if (quoteStyleInput.value === "straight") {
+          return {
+            open: '"',
+            close: '"',
+          };
+        }
+
+        return {
+          open: "\u201C",
+          close: "\u201D",
+        };
+      }
+
+      function getOverlayY(overlayHeight) {
+        if (overlayPositionInput.value === "top") return 0;
+        if (overlayPositionInput.value === "center") {
+          return (canvas.height - overlayHeight) / 2;
+        }
+
+        return canvas.height - overlayHeight;
+      }
+
+      function getTextY(overlayY, overlayHeight, textHeight) {
+        const padding = 30;
+        const topY = overlayY + padding;
+        const bottomY = overlayY + overlayHeight - textHeight - padding;
+
+        if (textVerticalAlignInput.value === "top") {
+          return topY;
+        }
+
+        if (textVerticalAlignInput.value === "bottom") {
+          return Math.max(topY, bottomY);
+        }
+
+        return Math.max(topY, overlayY + (overlayHeight - textHeight) / 2);
+      }
+
+      function drawCanvas() {
+        if (!mainImage) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.drawImage(mainImage, 0, 0, canvas.width, canvas.height);
+
+        const overlayHeight = Math.min(
+          Number(overlayHeightInput.value),
+          canvas.height,
+        );
+        const overlayY = getOverlayY(overlayHeight);
+
+        const rgb = hexToRgb(overlayColorInput.value);
+        const opacity = Number(overlayOpacityInput.value);
+
+        ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+        ctx.fillRect(0, overlayY, canvas.width, overlayHeight);
+
+        const fontSize = Number(fontSizeInput.value);
+        const fontFamily = fontFamilyInput.value;
+        const isQuote = quoteTextInput.checked;
+        ctx.fillStyle = textColorInput.value;
+        ctx.font = `bold ${fontSize}px ${fontFamily}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+
+        const text = posterTextInput.value;
+        const textX = canvas.width / 2;
+        const maxTextWidth = Math.max(80, canvas.width - (isQuote ? 180 : 120));
+        const lineHeight = fontSize + 12;
+        const lines = getWrappedLines(text, maxTextWidth);
+        const textHeight = lines.length
+          ? (lines.length - 1) * lineHeight + fontSize
+          : 0;
+        const textY = getTextY(overlayY, overlayHeight, textHeight);
+
+        if (isQuote && lines.length) {
+          const quoteSize = Math.round(fontSize * 1.9);
+          const quoteGap = Math.max(6, fontSize * 0.18);
+          const quoteMarks = getQuoteMarks();
+          const firstLineWidth = ctx.measureText(lines[0]).width;
+          const lastLineWidth = ctx.measureText(lines[lines.length - 1]).width;
+          const firstLineLeft = textX - firstLineWidth / 2;
+          const lastLineRight = textX + lastLineWidth / 2;
+
+          ctx.font = `bold ${quoteSize}px ${fontFamily}`;
+          ctx.fillStyle = quoteColorInput.value;
+          ctx.textAlign = "right";
+          ctx.fillText(quoteMarks.open, firstLineLeft - quoteGap, textY - 12);
+          ctx.textAlign = "left";
+          ctx.fillText(
+            quoteMarks.close,
+            lastLineRight + quoteGap,
+            textY + textHeight - fontSize,
+          );
+
+          ctx.font = `bold ${fontSize}px ${fontFamily}`;
+          ctx.fillStyle = textColorInput.value;
+          ctx.textAlign = "center";
+        }
+
+        drawWrappedLines(lines, textX, textY, lineHeight);
+
+        if (logoImage) {
+          drawCircularImage(logoImage, logo.x, logo.y, logo.size);
+        }
+      }
+
+      function getMousePosition(e) {
+        const rect = canvas.getBoundingClientRect();
+
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY,
+        };
+      }
+
+      function isInsideLogo(x, y) {
+        return (
+          logoImage &&
+          x >= logo.x &&
+          x <= logo.x + logo.size &&
+          y >= logo.y &&
+          y <= logo.y + logo.size
+        );
+      }
+
+      canvas.addEventListener("mousedown", function (e) {
+        const pos = getMousePosition(e);
+
+        if (isInsideLogo(pos.x, pos.y)) {
+          logo.dragging = true;
+          logo.offsetX = pos.x - logo.x;
+          logo.offsetY = pos.y - logo.y;
+          canvas.style.cursor = "grabbing";
+        }
+      });
+
+      canvas.addEventListener("mousemove", function (e) {
+        const pos = getMousePosition(e);
+
+        if (logo.dragging) {
+          logo.x = pos.x - logo.offsetX;
+          logo.y = pos.y - logo.offsetY;
+
+          drawCanvas();
+        } else {
+          canvas.style.cursor = isInsideLogo(pos.x, pos.y) ? "grab" : "default";
+        }
+      });
+
+      canvas.addEventListener("mouseup", function () {
+        logo.dragging = false;
+        canvas.style.cursor = "default";
+      });
+
+      canvas.addEventListener("mouseleave", function () {
+        logo.dragging = false;
+        canvas.style.cursor = "default";
+      });
+
+      [
+        overlayColorInput,
+        overlayOpacityInput,
+        overlayPositionInput,
+        overlayHeightInput,
+        posterTextInput,
+        textColorInput,
+        fontSizeInput,
+        fontFamilyInput,
+        textVerticalAlignInput,
+        quoteTextInput,
+        quoteStyleInput,
+        quoteColorInput,
+        logoSizeInput,
+      ].forEach((input) => {
+        input.addEventListener("input", function () {
+          if (input === logoSizeInput) {
+            placeLogoInSelectedCorner();
+          }
+
+          drawCanvas();
+        });
+      });
+
+      downloadBtn.addEventListener("click", function () {
+        if (!mainImage) {
+          alert("Please upload a main image first.");
+          return;
+        }
+
+        const link = document.createElement("a");
+        link.download = "poster.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    </script>
+  </body>
+</html>
