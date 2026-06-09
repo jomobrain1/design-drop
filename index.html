@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple Poster Maker</title>
+    <title>Simple Poster and Video Maker</title>
 
     <style>
       body {
@@ -11,11 +11,46 @@
         background: #f4f4f4;
         margin: 0;
         padding: 20px;
+        color: #1f2937;
+      }
+
+      .shell {
+        max-width: 1100px;
+        margin: auto;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .tab-button {
+        width: auto;
+        border: 1px solid #cbd5e1;
+        background: white;
+        color: #1f2937;
+        border-radius: 8px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .tab-button.active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: white;
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
       }
 
       .app {
-        max-width: 1100px;
-        margin: auto;
         display: grid;
         grid-template-columns: 300px 1fr;
         gap: 20px;
@@ -24,7 +59,7 @@
       .controls {
         background: white;
         padding: 20px;
-        border-radius: 12px;
+        border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
@@ -67,18 +102,39 @@
         background: #1d4ed8;
       }
 
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+
       .canvas-box {
         background: white;
         padding: 20px;
-        border-radius: 12px;
+        border-radius: 8px;
         text-align: center;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
-      canvas {
+      canvas,
+      video {
         max-width: 100%;
         border: 1px solid #ddd;
+      }
+
+      canvas {
         cursor: grab;
+      }
+
+      .video-preview {
+        display: block;
+        margin: 0 auto 16px;
+        max-height: 260px;
+        background: #000;
+      }
+
+      .hint {
+        margin-bottom: 0;
+        color: #475569;
       }
 
       @media (max-width: 800px) {
@@ -98,123 +154,242 @@
   </head>
 
   <body>
-    <div class="app">
-      <div class="controls">
-        <h2>Poster Maker</h2>
-
-        <label>Main Image</label>
-        <input type="file" id="mainImageInput" accept="image/*" />
-
-        <label>Logo Image</label>
-        <input type="file" id="logoInput" accept="image/*" />
-
-        <label>Logo Corner</label>
-        <select id="logoCorner">
-          <option value="top-right">Top Right</option>
-          <option value="top-left">Top Left</option>
-        </select>
-
-        <label>Overlay Color</label>
-        <input type="color" id="overlayColor" value="#ffffff" />
-
-        <label>Overlay Opacity</label>
-        <input
-          type="range"
-          id="overlayOpacity"
-          min="0"
-          max="1"
-          step="0.1"
-          value="0.7"
-        />
-
-        <label>Overlay Position</label>
-        <select id="overlayPosition">
-          <option value="bottom">Bottom</option>
-          <option value="center">Center</option>
-          <option value="top">Top</option>
-        </select>
-
-        <label>Overlay Height</label>
-        <input
-          type="range"
-          id="overlayHeight"
-          min="80"
-          max="600"
-          step="10"
-          value="160"
-        />
-
-        <label>Text Color</label>
-        <input type="color" id="textColor" value="#000000" />
-
-        <label>Text</label>
-        <textarea
-          id="posterText"
-          placeholder="Enter your poster text here..."
-        ></textarea>
-
-        <label>Font Size</label>
-        <input
-          type="range"
-          id="fontSize"
-          min="20"
-          max="80"
-          step="2"
-          value="42"
-        />
-
-        <label>Font Family</label>
-        <select id="fontFamily">
-          <option value="Arial">Arial</option>
-          <option value="Georgia">Georgia</option>
-          <option value="'Times New Roman'">Times New Roman</option>
-          <option value="'Trebuchet MS'">Trebuchet MS</option>
-          <option value="Verdana">Verdana</option>
-          <option value="'Courier New'">Courier New</option>
-        </select>
-
-        <label>Text Position On Overlay</label>
-        <select id="textVerticalAlign">
-          <option value="center">Center</option>
-          <option value="top">Top</option>
-          <option value="bottom">Bottom</option>
-        </select>
-
-        <label>
-          <input type="checkbox" id="quoteText" />
-          Quote Text
-        </label>
-
-        <label>Quote Style</label>
-        <select id="quoteStyle">
-          <option value="curly">Curly Commas</option>
-          <option value="block">Block Quotes</option>
-          <option value="straight">Straight Quotes</option>
-        </select>
-
-        <label>Quote Color</label>
-        <input type="color" id="quoteColor" value="#000000" />
-
-        <label>Logo Size</label>
-        <input
-          type="range"
-          id="logoSize"
-          min="50"
-          max="200"
-          step="5"
-          value="100"
-        />
-
-        <button id="downloadBtn">Download Image</button>
+    <div class="shell">
+      <div class="tabs">
+        <button class="tab-button active" data-tab="imageTab">Image Editor</button>
+        <button class="tab-button" data-tab="videoTab">Video Editor</button>
       </div>
 
-      <div class="canvas-box">
-        <canvas id="canvas"></canvas>
-        <p>Drag the logo to move it.</p>
-      </div>
+      <section class="tab-panel active" id="imageTab">
+        <div class="app">
+          <div class="controls">
+            <h2>Poster Maker</h2>
+
+            <label>Main Image</label>
+            <input type="file" id="mainImageInput" accept="image/*" />
+
+            <label>Logo Image</label>
+            <input type="file" id="logoInput" accept="image/*" />
+
+            <label>Logo Corner</label>
+            <select id="logoCorner">
+              <option value="top-right">Top Right</option>
+              <option value="top-left">Top Left</option>
+            </select>
+
+            <label>Overlay Color</label>
+            <input type="color" id="overlayColor" value="#ffffff" />
+
+            <label>Overlay Opacity</label>
+            <input
+              type="range"
+              id="overlayOpacity"
+              min="0"
+              max="1"
+              step="0.1"
+              value="0.7"
+            />
+
+            <label>Overlay Position</label>
+            <select id="overlayPosition">
+              <option value="bottom">Bottom</option>
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+            </select>
+
+            <label>Overlay Height</label>
+            <input
+              type="range"
+              id="overlayHeight"
+              min="80"
+              max="600"
+              step="10"
+              value="160"
+            />
+
+            <label>Text Color</label>
+            <input type="color" id="textColor" value="#000000" />
+
+            <label>Text</label>
+            <textarea
+              id="posterText"
+              placeholder="Enter your poster text here..."
+            ></textarea>
+
+            <label>Font Size</label>
+            <input
+              type="range"
+              id="fontSize"
+              min="20"
+              max="80"
+              step="2"
+              value="42"
+            />
+
+            <label>Font Family</label>
+            <select id="fontFamily">
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="'Times New Roman'">Times New Roman</option>
+              <option value="'Trebuchet MS'">Trebuchet MS</option>
+              <option value="Verdana">Verdana</option>
+              <option value="'Courier New'">Courier New</option>
+            </select>
+
+            <label>Text Position On Overlay</label>
+            <select id="textVerticalAlign">
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+            </select>
+
+            <label>
+              <input type="checkbox" id="quoteText" />
+              Quote Text
+            </label>
+
+            <label>Quote Style</label>
+            <select id="quoteStyle">
+              <option value="curly">Curly Commas</option>
+              <option value="block">Block Quotes</option>
+              <option value="straight">Straight Quotes</option>
+            </select>
+
+            <label>Quote Color</label>
+            <input type="color" id="quoteColor" value="#000000" />
+
+            <label>Logo Size</label>
+            <input
+              type="range"
+              id="logoSize"
+              min="50"
+              max="200"
+              step="5"
+              value="100"
+            />
+
+            <button id="downloadBtn">Download Image</button>
+          </div>
+
+          <div class="canvas-box">
+            <canvas id="canvas"></canvas>
+            <p class="hint">Drag the logo to move it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="videoTab">
+        <div class="app">
+          <div class="controls">
+            <h2>Video Editor</h2>
+
+            <label>Upload Video</label>
+            <input type="file" id="videoInput" accept="video/*" />
+
+            <label>Upload Logo</label>
+            <input type="file" id="videoLogoInput" accept="image/*" />
+
+            <label>Overlay Color</label>
+            <input type="color" id="videoOverlayColor" value="#ffffff" />
+
+            <label>Overlay Opacity</label>
+            <input
+              type="range"
+              id="videoOverlayOpacity"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.7"
+            />
+
+            <label>Overlay Height</label>
+            <input
+              type="range"
+              id="videoOverlayHeight"
+              min="40"
+              max="400"
+              step="10"
+              value="140"
+            />
+
+            <label>Overlay Position</label>
+            <select id="videoOverlayPosition">
+              <option value="bottom">Bottom</option>
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+            </select>
+
+            <label>Text</label>
+            <textarea
+              id="videoText"
+              placeholder="Enter your video text here..."
+            ></textarea>
+
+            <label>Text Color</label>
+            <input type="color" id="videoTextColor" value="#000000" />
+
+            <label>Font Size</label>
+            <input
+              type="range"
+              id="videoFontSize"
+              min="18"
+              max="90"
+              step="2"
+              value="42"
+            />
+
+            <label>Text Position On Overlay</label>
+            <select id="videoTextVerticalAlign">
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+            </select>
+
+            <label>Logo Corner</label>
+            <select id="videoLogoCorner">
+              <option value="top-right">Top Right</option>
+              <option value="top-left">Top Left</option>
+              <option value="bottom-right">Bottom Right</option>
+              <option value="bottom-left">Bottom Left</option>
+            </select>
+
+            <label>Logo Size</label>
+            <input
+              type="range"
+              id="videoLogoSize"
+              min="40"
+              max="220"
+              step="5"
+              value="100"
+            />
+
+            <button id="startVideoPreviewBtn">Start Preview</button>
+            <button id="downloadVideoBtn">Download Video</button>
+          </div>
+
+          <div class="canvas-box">
+            <video id="sourceVideo" class="video-preview" controls></video>
+            <canvas id="videoCanvas"></canvas>
+            <p class="hint">Drag the logo on the edited preview to move it.</p>
+          </div>
+        </div>
+      </section>
     </div>
 
     <script>
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const tabPanels = document.querySelectorAll(".tab-panel");
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          tabButtons.forEach((item) => item.classList.remove("active"));
+          tabPanels.forEach((panel) => panel.classList.remove("active"));
+
+          button.classList.add("active");
+          document.getElementById(button.dataset.tab).classList.add("active");
+        });
+      });
+
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
 
@@ -326,33 +501,37 @@
         };
       }
 
-      function drawCircularImage(img, x, y, size) {
-        ctx.save();
+      function drawCircularImageOnContext(context, img, x, y, size) {
+        context.save();
 
-        ctx.beginPath();
-        ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
+        context.beginPath();
+        context.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+        context.closePath();
+        context.clip();
 
-        ctx.drawImage(img, x, y, size, size);
+        context.drawImage(img, x, y, size, size);
 
-        ctx.restore();
+        context.restore();
 
-        ctx.beginPath();
-        ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 6;
-        ctx.stroke();
+        context.beginPath();
+        context.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+        context.strokeStyle = "#ffffff";
+        context.lineWidth = Math.max(4, size * 0.06);
+        context.stroke();
       }
 
-      function getWrappedLines(text, maxWidth) {
+      function drawCircularImage(img, x, y, size) {
+        drawCircularImageOnContext(ctx, img, x, y, size);
+      }
+
+      function getWrappedLinesForContext(context, text, maxWidth) {
         const words = text.split(" ");
         const lines = [];
         let line = "";
 
         for (let i = 0; i < words.length; i++) {
           const testLine = line + words[i] + " ";
-          const metrics = ctx.measureText(testLine);
+          const metrics = context.measureText(testLine);
           const testWidth = metrics.width;
 
           if (testWidth > maxWidth && i > 0) {
@@ -370,10 +549,18 @@
         return lines;
       }
 
-      function drawWrappedLines(lines, x, y, lineHeight) {
+      function getWrappedLines(text, maxWidth) {
+        return getWrappedLinesForContext(ctx, text, maxWidth);
+      }
+
+      function drawWrappedLinesOnContext(context, lines, x, y, lineHeight) {
         lines.forEach((line, index) => {
-          ctx.fillText(line, x, y + index * lineHeight);
+          context.fillText(line, x, y + index * lineHeight);
         });
+      }
+
+      function drawWrappedLines(lines, x, y, lineHeight) {
+        drawWrappedLinesOnContext(ctx, lines, x, y, lineHeight);
       }
 
       function getQuoteMarks() {
@@ -494,16 +681,19 @@
         }
       }
 
-      function getMousePosition(e) {
-        const rect = canvas.getBoundingClientRect();
-
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+      function getCanvasPointerPosition(canvasElement, e) {
+        const rect = canvasElement.getBoundingClientRect();
+        const scaleX = canvasElement.width / rect.width;
+        const scaleY = canvasElement.height / rect.height;
 
         return {
           x: (e.clientX - rect.left) * scaleX,
           y: (e.clientY - rect.top) * scaleY,
         };
+      }
+
+      function getMousePosition(e) {
+        return getCanvasPointerPosition(canvas, e);
       }
 
       function isInsideLogo(x, y) {
@@ -584,6 +774,414 @@
         link.download = "poster.png";
         link.href = canvas.toDataURL("image/png");
         link.click();
+      });
+
+      const sourceVideo = document.getElementById("sourceVideo");
+      const videoCanvas = document.getElementById("videoCanvas");
+      const videoCtx = videoCanvas.getContext("2d");
+
+      const videoInput = document.getElementById("videoInput");
+      const videoLogoInput = document.getElementById("videoLogoInput");
+      const videoOverlayColorInput =
+        document.getElementById("videoOverlayColor");
+      const videoOverlayOpacityInput =
+        document.getElementById("videoOverlayOpacity");
+      const videoOverlayHeightInput =
+        document.getElementById("videoOverlayHeight");
+      const videoOverlayPositionInput =
+        document.getElementById("videoOverlayPosition");
+      const videoTextInput = document.getElementById("videoText");
+      const videoTextColorInput = document.getElementById("videoTextColor");
+      const videoFontSizeInput = document.getElementById("videoFontSize");
+      const videoTextVerticalAlignInput =
+        document.getElementById("videoTextVerticalAlign");
+      const videoLogoCornerInput = document.getElementById("videoLogoCorner");
+      const videoLogoSizeInput = document.getElementById("videoLogoSize");
+      const startVideoPreviewBtn = document.getElementById(
+        "startVideoPreviewBtn",
+      );
+      const downloadVideoBtn = document.getElementById("downloadVideoBtn");
+
+      let videoLogoImage = null;
+      let videoPreviewRunning = false;
+      let videoAnimationFrameId = 0;
+      let videoObjectUrl = "";
+      let videoAudioContext = null;
+      let videoAudioSource = null;
+      let videoAudioDestination = null;
+
+      let videoLogo = {
+        x: 30,
+        y: 30,
+        size: 100,
+        corner: "top-right",
+        dragging: false,
+        offsetX: 0,
+        offsetY: 0,
+      };
+
+      function placeVideoLogoInSelectedCorner() {
+        if (!videoCanvas.width || !videoCanvas.height) return;
+
+        const padding = 40;
+        videoLogo.size = Number(videoLogoSizeInput.value);
+        videoLogo.corner = videoLogoCornerInput.value;
+        videoLogo.x = videoLogo.corner.includes("left")
+          ? padding
+          : videoCanvas.width - videoLogo.size - padding;
+        videoLogo.y = videoLogo.corner.includes("top")
+          ? padding
+          : videoCanvas.height - videoLogo.size - padding;
+      }
+
+      function getVideoOverlayY(overlayHeight) {
+        if (videoOverlayPositionInput.value === "top") return 0;
+
+        if (videoOverlayPositionInput.value === "center") {
+          return (videoCanvas.height - overlayHeight) / 2;
+        }
+
+        return videoCanvas.height - overlayHeight;
+      }
+
+      function getVideoTextY(overlayY, overlayHeight, textHeight) {
+        const padding = 24;
+        const topY = overlayY + padding;
+        const bottomY = overlayY + overlayHeight - textHeight - padding;
+
+        if (videoTextVerticalAlignInput.value === "top") {
+          return topY;
+        }
+
+        if (videoTextVerticalAlignInput.value === "bottom") {
+          return Math.max(topY, bottomY);
+        }
+
+        return Math.max(topY, overlayY + (overlayHeight - textHeight) / 2);
+      }
+
+      function drawVideoEditorFrame() {
+        if (!sourceVideo.videoWidth || !sourceVideo.videoHeight) return;
+
+        videoCtx.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
+        videoCtx.drawImage(sourceVideo, 0, 0, videoCanvas.width, videoCanvas.height);
+
+        const overlayHeight = Math.min(
+          Number(videoOverlayHeightInput.value),
+          videoCanvas.height,
+        );
+        const overlayY = getVideoOverlayY(overlayHeight);
+        const rgb = hexToRgb(videoOverlayColorInput.value);
+        const opacity = Number(videoOverlayOpacityInput.value);
+
+        videoCtx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+        videoCtx.fillRect(0, overlayY, videoCanvas.width, overlayHeight);
+
+        const fontSize = Number(videoFontSizeInput.value);
+        const lineHeight = fontSize + 12;
+        const text = videoTextInput.value;
+        const maxTextWidth = Math.max(80, videoCanvas.width - 120);
+
+        videoCtx.fillStyle = videoTextColorInput.value;
+        videoCtx.font = `bold ${fontSize}px Arial`;
+        videoCtx.textAlign = "center";
+        videoCtx.textBaseline = "top";
+
+        const lines = getWrappedLinesForContext(videoCtx, text, maxTextWidth);
+        const textHeight = lines.length
+          ? (lines.length - 1) * lineHeight + fontSize
+          : 0;
+        const textX = videoCanvas.width / 2;
+        const textY = getVideoTextY(overlayY, overlayHeight, textHeight);
+
+        drawWrappedLinesOnContext(videoCtx, lines, textX, textY, lineHeight);
+
+        if (videoLogoImage) {
+          drawCircularImageOnContext(
+            videoCtx,
+            videoLogoImage,
+            videoLogo.x,
+            videoLogo.y,
+            videoLogo.size,
+          );
+        }
+      }
+
+      function runVideoPreviewLoop() {
+        if (!videoPreviewRunning) {
+          videoAnimationFrameId = 0;
+          return;
+        }
+
+        drawVideoEditorFrame();
+        videoAnimationFrameId = requestAnimationFrame(runVideoPreviewLoop);
+      }
+
+      function startVideoDrawingLoop() {
+        if (videoAnimationFrameId) return;
+
+        videoPreviewRunning = true;
+        runVideoPreviewLoop();
+      }
+
+      function stopVideoDrawingLoop() {
+        videoPreviewRunning = false;
+
+        if (videoAnimationFrameId) {
+          cancelAnimationFrame(videoAnimationFrameId);
+          videoAnimationFrameId = 0;
+        }
+      }
+
+      function startVideoPreview() {
+        if (!sourceVideo.src) {
+          alert("Please upload a video first.");
+          return;
+        }
+
+        startVideoDrawingLoop();
+        sourceVideo.play();
+      }
+
+      videoInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (videoObjectUrl) {
+          URL.revokeObjectURL(videoObjectUrl);
+        }
+
+        videoObjectUrl = URL.createObjectURL(file);
+        sourceVideo.src = videoObjectUrl;
+        sourceVideo.load();
+      });
+
+      sourceVideo.addEventListener("loadedmetadata", function () {
+        videoCanvas.width = sourceVideo.videoWidth;
+        videoCanvas.height = sourceVideo.videoHeight;
+
+        placeVideoLogoInSelectedCorner();
+        drawVideoEditorFrame();
+      });
+
+      sourceVideo.addEventListener("play", function () {
+        startVideoDrawingLoop();
+      });
+
+      sourceVideo.addEventListener("pause", function () {
+        stopVideoDrawingLoop();
+        drawVideoEditorFrame();
+      });
+
+      sourceVideo.addEventListener("ended", function () {
+        stopVideoDrawingLoop();
+        drawVideoEditorFrame();
+      });
+
+      videoLogoInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        loadImageFromFile(file, function (img) {
+          videoLogoImage = img;
+          placeVideoLogoInSelectedCorner();
+          drawVideoEditorFrame();
+        });
+      });
+
+      [
+        videoOverlayColorInput,
+        videoOverlayOpacityInput,
+        videoOverlayHeightInput,
+        videoOverlayPositionInput,
+        videoTextInput,
+        videoTextColorInput,
+        videoFontSizeInput,
+        videoTextVerticalAlignInput,
+        videoLogoCornerInput,
+        videoLogoSizeInput,
+      ].forEach((input) => {
+        const updateVideoCanvasFromControl = function () {
+          if (input === videoLogoSizeInput || input === videoLogoCornerInput) {
+            placeVideoLogoInSelectedCorner();
+          }
+
+          drawVideoEditorFrame();
+        };
+
+        input.addEventListener("input", updateVideoCanvasFromControl);
+        input.addEventListener("change", updateVideoCanvasFromControl);
+      });
+
+      function isInsideVideoLogo(x, y) {
+        return (
+          videoLogoImage &&
+          x >= videoLogo.x &&
+          x <= videoLogo.x + videoLogo.size &&
+          y >= videoLogo.y &&
+          y <= videoLogo.y + videoLogo.size
+        );
+      }
+
+      videoCanvas.addEventListener("mousedown", function (e) {
+        const pos = getCanvasPointerPosition(videoCanvas, e);
+
+        if (isInsideVideoLogo(pos.x, pos.y)) {
+          videoLogo.dragging = true;
+          videoLogo.offsetX = pos.x - videoLogo.x;
+          videoLogo.offsetY = pos.y - videoLogo.y;
+          videoCanvas.style.cursor = "grabbing";
+        }
+      });
+
+      videoCanvas.addEventListener("mousemove", function (e) {
+        const pos = getCanvasPointerPosition(videoCanvas, e);
+
+        if (videoLogo.dragging) {
+          videoLogo.x = pos.x - videoLogo.offsetX;
+          videoLogo.y = pos.y - videoLogo.offsetY;
+          drawVideoEditorFrame();
+        } else {
+          videoCanvas.style.cursor = isInsideVideoLogo(pos.x, pos.y)
+            ? "grab"
+            : "default";
+        }
+      });
+
+      videoCanvas.addEventListener("mouseup", function () {
+        videoLogo.dragging = false;
+        videoCanvas.style.cursor = "default";
+      });
+
+      videoCanvas.addEventListener("mouseleave", function () {
+        videoLogo.dragging = false;
+        videoCanvas.style.cursor = "default";
+      });
+
+      startVideoPreviewBtn.addEventListener("click", startVideoPreview);
+
+      function getSupportedRecorderMimeType() {
+        const types = [
+          "video/webm;codecs=vp9",
+          "video/webm;codecs=vp8",
+          "video/webm",
+        ];
+
+        return types.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+      }
+
+      async function getOriginalVideoAudioTracks() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+          return [];
+        }
+
+        if (!videoAudioContext) {
+          videoAudioContext = new AudioContextClass();
+        }
+
+        if (videoAudioContext.state === "suspended") {
+          await videoAudioContext.resume();
+        }
+
+        if (!videoAudioSource) {
+          videoAudioSource = videoAudioContext.createMediaElementSource(sourceVideo);
+          videoAudioDestination = videoAudioContext.createMediaStreamDestination();
+
+          videoAudioSource.connect(videoAudioDestination);
+          videoAudioSource.connect(videoAudioContext.destination);
+        }
+
+        return videoAudioDestination.stream.getAudioTracks();
+      }
+
+      function seekSourceVideo(time) {
+        return new Promise((resolve) => {
+          if (Math.abs(sourceVideo.currentTime - time) < 0.01) {
+            resolve();
+            return;
+          }
+
+          const handleSeeked = function () {
+            sourceVideo.removeEventListener("seeked", handleSeeked);
+            resolve();
+          };
+
+          sourceVideo.addEventListener("seeked", handleSeeked);
+          sourceVideo.currentTime = time;
+        });
+      }
+
+      downloadVideoBtn.addEventListener("click", async function () {
+        if (!sourceVideo.src || !videoCanvas.width || !videoCanvas.height) {
+          alert("Please upload a video first.");
+          return;
+        }
+
+        if (!window.MediaRecorder || !videoCanvas.captureStream) {
+          alert("Your browser does not support canvas video recording.");
+          return;
+        }
+
+        const chunks = [];
+        const canvasStream = videoCanvas.captureStream(30);
+        const audioTracks = await getOriginalVideoAudioTracks();
+        const stream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...audioTracks,
+        ]);
+        const mimeType = getSupportedRecorderMimeType();
+        const recorder = new MediaRecorder(
+          stream,
+          mimeType ? { mimeType } : undefined,
+        );
+
+        // WebM is used here because MediaRecorder supports it widely.
+        // MP4 export can be added later using FFmpeg on a Node.js backend.
+        recorder.ondataavailable = function (event) {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+
+        recorder.onstop = function () {
+          const blob = new Blob(chunks, { type: mimeType || "video/webm" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+
+          link.download = "edited-video.webm";
+          link.href = url;
+          link.click();
+
+          URL.revokeObjectURL(url);
+          downloadVideoBtn.disabled = false;
+          downloadVideoBtn.textContent = "Download Video";
+        };
+
+        downloadVideoBtn.disabled = true;
+        downloadVideoBtn.textContent = "Recording...";
+
+        sourceVideo.pause();
+        await seekSourceVideo(0);
+        drawVideoEditorFrame();
+
+        sourceVideo.onended = function () {
+          stopVideoDrawingLoop();
+          recorder.stop();
+          sourceVideo.onended = null;
+        };
+
+        startVideoDrawingLoop();
+        recorder.start();
+
+        try {
+          await sourceVideo.play();
+        } catch (error) {
+          recorder.stop();
+          stopVideoDrawingLoop();
+          alert("Could not play the video for recording.");
+        }
       });
     </script>
   </body>
